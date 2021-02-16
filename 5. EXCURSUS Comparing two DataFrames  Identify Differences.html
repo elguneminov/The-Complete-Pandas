@@ -1,0 +1,26 @@
+<p>In the following, you can find 5 ways how to identify / highlight differences between two versions of the same Dataset over time.</p><p><br></p><p>See below an example with the Sales Dataframe (two elements are changed from Day1 to Day2):</p><figure><img src="https://udemy-images.s3.amazonaws.com:443/redactor/raw/2019-05-02_10-08-45-1abb052fc4f8464d275af56769229e85.PNG"></figure><figure><img src="https://udemy-images.s3.amazonaws.com:443/redactor/raw/2019-05-02_10-28-35-d9266bff80635d3c5e002fe0b62525cf.PNG"></figure><figure><img src="https://udemy-images.s3.amazonaws.com:443/redactor/raw/2019-05-02_10-29-02-9c83aa6cda8e8de62e34c1893c2070fc.PNG"></figure><p><strong>for copy-paste (mind the indents!):</strong></p><pre class="prettyprint linenums">def highlight_diff(data, color='yellow'):
+&nbsp; &nbsp; attr = 'background-color: {}'.format(color)
+&nbsp; &nbsp; other = data.xs('Day1', axis='columns', level=-2)
+&nbsp; &nbsp; return pd.DataFrame(np.where(data.ne(other, level=1), attr, ''),
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; index=data.index, columns=data.columns)
+
+sales_comp.style.apply(highlight_diff, axis=None) </pre><p><br></p><figure><img src="https://udemy-images.s3.amazonaws.com:443/redactor/raw/2019-05-02_10-13-48-3ac8d06e9583dd94458080f327d0913b.PNG"></figure><p><strong>for copy-paste (mind the indents!):</strong></p><pre class="prettyprint linenums">def diff_pd(df1, df2):
+&nbsp; &nbsp; """Identify differences between two pandas DataFrames"""
+&nbsp; &nbsp; assert (df1.columns == df2.columns).all(), \
+&nbsp; &nbsp; &nbsp; &nbsp; "DataFrame column names are different"
+&nbsp; &nbsp; if any(df1.dtypes != df2.dtypes):
+&nbsp; &nbsp; &nbsp; &nbsp; "Data Types are different, trying to convert"
+&nbsp; &nbsp; &nbsp; &nbsp; df2 = df2.astype(df1.dtypes)
+&nbsp; &nbsp; if df1.equals(df2):
+&nbsp; &nbsp; &nbsp; &nbsp; return None
+&nbsp; &nbsp; else:
+&nbsp; &nbsp; &nbsp; &nbsp; # need to account for np.nan != np.nan returning True
+&nbsp; &nbsp; &nbsp; &nbsp; diff_mask = (df1 != df2) &amp; ~(df1.isnull() &amp; df2.isnull())
+&nbsp; &nbsp; &nbsp; &nbsp; ne_stacked = diff_mask.stack()
+&nbsp; &nbsp; &nbsp; &nbsp; changed = ne_stacked[ne_stacked]
+&nbsp; &nbsp; &nbsp; &nbsp; changed.index.names = ['id', 'col']
+&nbsp; &nbsp; &nbsp; &nbsp; difference_locations = np.where(diff_mask)
+&nbsp; &nbsp; &nbsp; &nbsp; changed_from = df1.values[difference_locations]
+&nbsp; &nbsp; &nbsp; &nbsp; changed_to = df2.values[difference_locations]
+&nbsp; &nbsp; &nbsp; &nbsp; return pd.DataFrame({'from': changed_from, 'to': changed_to},
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; index=changed.index)</pre>
